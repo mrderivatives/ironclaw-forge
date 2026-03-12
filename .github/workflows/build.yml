@@ -1,0 +1,48 @@
+name: Build IronClaw Docker Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      ironclaw_ref:
+        description: 'IronClaw git ref (tag or branch)'
+        default: 'main'
+        required: true
+      image_tag:
+        description: 'Docker image tag'
+        default: 'latest'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push IronClaw image
+        uses: docker/build-push-action@v5
+        with:
+          context: "https://github.com/nearai/ironclaw.git#${{ inputs.ironclaw_ref }}"
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/mrderivatives/ironclaw-forge:${{ inputs.image_tag }}
+            ghcr.io/mrderivatives/ironclaw-forge:${{ inputs.ironclaw_ref }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Image built
+        run: |
+          echo "✅ Built ghcr.io/mrderivatives/ironclaw-forge:${{ inputs.image_tag }}"
+          echo "Platforms: linux/amd64"
