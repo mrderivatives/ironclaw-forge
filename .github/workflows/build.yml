@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       ironclaw_ref:
-        description: 'IronClaw git ref (tag or branch)'
+        description: 'IronClaw git ref (tag, branch, or commit SHA)'
         default: 'main'
         required: true
       image_tag:
-        description: 'Docker image tag'
+        description: 'Docker image tag (e.g. latest, v0.18.0)'
         default: 'latest'
         required: true
 
@@ -20,6 +20,9 @@ jobs:
       packages: write
 
     steps:
+      - name: Checkout ironclaw-forge
+        uses: actions/checkout@v4
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -30,19 +33,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push IronClaw image
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: "https://github.com/nearai/ironclaw.git#${{ inputs.ironclaw_ref }}"
+          context: .
+          file: ./Dockerfile
           platforms: linux/amd64
           push: true
+          build-args: |
+            IRONCLAW_REF=${{ inputs.ironclaw_ref }}
           tags: |
             ghcr.io/mrderivatives/ironclaw-forge:${{ inputs.image_tag }}
             ghcr.io/mrderivatives/ironclaw-forge:${{ inputs.ironclaw_ref }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Image built
+      - name: Summary
         run: |
           echo "✅ Built ghcr.io/mrderivatives/ironclaw-forge:${{ inputs.image_tag }}"
-          echo "Platforms: linux/amd64"
+          echo "IronClaw ref: ${{ inputs.ironclaw_ref }}"
+          echo "Platform: linux/amd64"
+          echo "Includes: forge-init entrypoint (identity seeding + wallet awareness)"
