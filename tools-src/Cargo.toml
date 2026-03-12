@@ -1,0 +1,3 @@
+[workspace]
+members = ["solana-balance", "token-price", "jupiter-quote", "jupiter-swap"]
+resolver = "2"

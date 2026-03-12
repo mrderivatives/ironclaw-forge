@@ -25,6 +25,16 @@ RUN git clone --depth 1 --branch ${IRONCLAW_REF} \
     https://github.com/nearai/ironclaw.git . \
     || git clone --depth 1 https://github.com/nearai/ironclaw.git .
 
+COPY tools-src /app/tools-src
+RUN cd /app/tools-src && cargo build --release --target wasm32-wasip2 --workspace 2>&1 | tail -5
+RUN mkdir -p /app/tools-dist && \
+    for tool in solana-balance token-price jupiter-quote jupiter-swap; do \
+      wasm-tools component new \
+        /app/tools-src/target/wasm32-wasip2/release/$(echo $tool | tr - _).wasm \
+        -o /app/tools-dist/${tool}.wasm && \
+      cp /app/tools-src/${tool}/capabilities.json /app/tools-dist/${tool}.capabilities.json; \
+    done
+
 RUN cargo build --release --bin ironclaw
 
 # ── Stage 2: forge runtime ─────────────────────────────────────────────────
@@ -42,6 +52,10 @@ COPY entrypoint.sh /usr/local/bin/forge-init
 RUN chmod +x /usr/local/bin/forge-init
 
 RUN useradd -m -u 1000 -s /bin/bash ironclaw
+RUN mkdir -p /home/ironclaw/.config/ironclaw/tools && chown -R ironclaw:ironclaw /home/ironclaw/.config
+COPY --from=builder /app/tools-dist/*.wasm /home/ironclaw/.config/ironclaw/tools/
+COPY --from=builder /app/tools-dist/*.capabilities.json /home/ironclaw/.config/ironclaw/tools/
+RUN chown -R ironclaw:ironclaw /home/ironclaw/.config/ironclaw/tools
 USER ironclaw
 
 EXPOSE 3000 8080

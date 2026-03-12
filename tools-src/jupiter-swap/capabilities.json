@@ -1,0 +1,1 @@
+{"version":"0.2.0","wit_version":"0.3.0","capabilities":{"http":{"allowlist":[{"host":"api.jup.ag","path_prefix":"/ultra/v1/order","methods":["GET"]},{"host":"api.jup.ag","path_prefix":"/ultra/v1/execute","methods":["POST"]}]},"secrets":{"allowed_names":["solana_private_key"]}}}
