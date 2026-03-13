@@ -52,10 +52,11 @@ COPY entrypoint.sh /usr/local/bin/forge-init
 RUN chmod +x /usr/local/bin/forge-init
 
 RUN useradd -m -u 1000 -s /bin/bash ironclaw
-RUN mkdir -p /home/ironclaw/.config/ironclaw/tools && chown -R ironclaw:ironclaw /home/ironclaw/.config
-COPY --from=builder /app/tools-dist/*.wasm /home/ironclaw/.config/ironclaw/tools/
-COPY --from=builder /app/tools-dist/*.capabilities.json /home/ironclaw/.config/ironclaw/tools/
-RUN chown -R ironclaw:ironclaw /home/ironclaw/.config/ironclaw/tools
+# Default IronClaw tools dir is ~/.ironclaw/tools/ (not ~/.config/ironclaw/tools/)
+RUN mkdir -p /home/ironclaw/.ironclaw/tools && chown -R ironclaw:ironclaw /home/ironclaw/.ironclaw
+COPY --from=builder /app/tools-dist/*.wasm /home/ironclaw/.ironclaw/tools/
+COPY --from=builder /app/tools-dist/*.capabilities.json /home/ironclaw/.ironclaw/tools/
+RUN chown -R ironclaw:ironclaw /home/ironclaw/.ironclaw/tools
 USER ironclaw
 
 EXPOSE 3000 8080

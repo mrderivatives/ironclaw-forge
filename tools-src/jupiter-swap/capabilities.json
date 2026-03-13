@@ -4,34 +4,13 @@
   "capabilities": {
     "http": {
       "allowlist": [
-        {
-          "host": "api.jup.ag",
-          "path_prefix": "/ultra/v1/order",
-          "methods": ["GET"]
-        },
-        {
-          "host": "api.jup.ag",
-          "path_prefix": "/ultra/v1/execute",
-          "methods": ["POST"]
-        }
+        { "host": "lite-api.jup.ag", "path_prefix": "/swap/v1/quote", "methods": ["GET"] },
+        { "host": "lite-api.jup.ag", "path_prefix": "/swap/v1/swap", "methods": ["POST"] },
+        { "host": "api.mainnet-beta.solana.com", "path_prefix": "/", "methods": ["POST"] }
       ]
     },
     "secrets": {
       "allowed_names": ["solana_private_key"]
     }
-  },
-  "auth": {
-    "secret_name": "solana_private_key",
-    "display_name": "Solana Wallet",
-    "instructions": "Base58-encoded 64-byte Solana keypair (seed || pubkey). Set SOLANA_PRIVATE_KEY env var to auto-provision.",
-    "env_var": "SOLANA_PRIVATE_KEY"
-  },
-  "setup": {
-    "required_secrets": [
-      {
-        "name": "solana_private_key",
-        "prompt": "Solana private key (base58-encoded 64-byte keypair)"
-      }
-    ]
   }
 }

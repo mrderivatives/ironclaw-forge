@@ -15,10 +15,10 @@ impl Guest for Tool {
         }
     }
     fn schema() -> String {
-        r#"{"type":"object","required":["tokens"],"properties":{"tokens":{"type":"array","items":{"type":"string"},"description":"Token symbols or mint addresses"}}}"#.into()
+        r#"{"type":"object","required":["tokens"],"properties":{"tokens":{"type":"array","items":{"type":"string"},"description":"CoinGecko token IDs (e.g. solana, usd-coin, bonk)"}}}"#.into()
     }
     fn description() -> String {
-        "Get current USD prices for Solana tokens by symbol or mint address via Jupiter Price API.".into()
+        "Get current USD prices for crypto tokens via CoinGecko. Use token IDs like: solana, usd-coin, bonk, ethereum.".into()
     }
 }
 
@@ -26,16 +26,14 @@ fn run(params: &str) -> Result<String, String> {
     #[derive(serde::Deserialize)]
     struct Params { tokens: Vec<String> }
     let p: Params = serde_json::from_str(params).map_err(|e| e.to_string())?;
-    if p.tokens.is_empty() { return Err("tokens must not be empty".into()); }
+    if p.tokens.is_empty() { return Err("tokens list cannot be empty".into()); }
+
     let ids = p.tokens.join(",");
-    let url = format!("https://api.jup.ag/price/v3?ids={}", ids);
-    let resp = near::agent::host::http_request(
-        "GET",
-        &url,
-        "{}",
-        None,
-        None,
-    ).map_err(|e| e)?;
+    let url = format!("https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies=usd&include_24hr_change=true", ids);
+
+    let resp = near::agent::host::http_request("GET", &url, "{}", None, Some(15000))
+        .map_err(|e| e)?;
+
     Ok(String::from_utf8_lossy(&resp.body).to_string())
 }
 

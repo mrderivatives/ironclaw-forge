@@ -14,217 +14,117 @@ impl Guest for Tool {
             Err(e)  => exports::near::agent::tool::Response { output: None, error: Some(e) },
         }
     }
-
     fn schema() -> String {
-        r#"{"type":"object","required":["from","to","amount","taker","confirmed"],"properties":{"from":{"type":"string","description":"Input token symbol or mint address (e.g. 'SOL', 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' for USDC)"},"to":{"type":"string","description":"Output token symbol or mint address"},"amount":{"type":"number","description":"Amount in human units (e.g. 0.01 for 0.01 SOL, 10 for 10 USDC)"},"taker":{"type":"string","description":"Signer wallet address (your wallet pubkey)"},"confirmed":{"type":"boolean","description":"Must be true to execute — prevents accidental swaps. Show the quote first and ask user to confirm."}}}"#.into()
+        r#"{"type":"object","required":["inputMint","outputMint","amount","userPublicKey","confirmed"],"properties":{"inputMint":{"type":"string","description":"Input token mint address"},"outputMint":{"type":"string","description":"Output token mint address"},"amount":{"type":"integer","description":"Amount in lamports (1 SOL = 1000000000)"},"userPublicKey":{"type":"string","description":"Agent wallet public key for signing"},"slippageBps":{"type":"integer","default":50},"confirmed":{"type":"boolean","description":"Must be true to execute — safety guard"}}}"#.into()
     }
-
     fn description() -> String {
-        "Execute a token swap on Solana via Jupiter Ultra. Gets a quote, signs, and submits the transaction. Always show the quote and ask for user confirmation before setting confirmed:true.".into()
+        "Execute a real token swap via Jupiter. Gets a quote, signs the transaction using the agent's keypair, and submits to Solana. Set confirmed:true. Common mints: SOL=So11111111111111111111111111111111111111112, USDC=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v".into()
     }
 }
 
-/// Token mint lookup for common symbols.
-fn resolve_mint(token: &str) -> &str {
-    match token.to_uppercase().as_str() {
-        "SOL"  => "So11111111111111111111111111111111111111112",
-        "USDC" => "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-        "USDT" => "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
-        "BONK" => "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
-        "JUP"  => "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
-        "WIF"  => "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
-        "RAY"  => "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",
-        _      => token, // assume it's already a mint address
-    }
-}
-
-/// Decimals for amount → smallest-unit conversion.
-fn decimals_for(token: &str) -> u32 {
-    match token.to_uppercase().as_str() {
-        "SOL"  => 9,
-        "USDC" | "USDT" => 6,
-        "BONK" => 5,
-        _      => 9, // default; Jupiter will handle errors for unknown mints
-    }
-}
-
-// ── Solana transaction signing helpers ─────────────────────────────────────
-
-/// Read a compact-u16 from `bytes` at position 0.
-/// Returns (value, bytes_consumed).
-fn read_compact_u16(bytes: &[u8]) -> Result<(u16, usize), String> {
-    if bytes.is_empty() {
-        return Err("empty buffer for compact-u16".into());
-    }
-    let b0 = bytes[0] as u16;
-    if b0 < 128 {
-        return Ok((b0, 1));
-    }
-    if bytes.len() < 2 {
-        return Err("truncated compact-u16".into());
-    }
-    let b1 = bytes[1] as u16;
-    if b1 < 128 {
-        return Ok(((b1 << 7) | (b0 & 0x7f), 2));
-    }
-    if bytes.len() < 3 {
-        return Err("truncated 3-byte compact-u16".into());
-    }
-    let b2 = bytes[2] as u16;
-    Ok(((b2 << 14) | ((b1 & 0x7f) << 7) | (b0 & 0x7f), 3))
-}
-
-/// Extract the message bytes from an unsigned Solana versioned transaction.
-///
-/// Layout: compact_u16(num_sigs) || sigs[num_sigs * 64] || message_bytes
-fn message_bytes(tx: &[u8]) -> Result<&[u8], String> {
-    let (num_sigs, hdr_len) = read_compact_u16(tx)?;
-    let sigs_end = hdr_len + (num_sigs as usize) * 64;
-    if tx.len() <= sigs_end {
-        return Err(format!(
-            "tx too short: len={} sigs_end={}", tx.len(), sigs_end
-        ));
-    }
-    Ok(&tx[sigs_end..])
-}
-
-/// Inject a 64-byte ed25519 signature into the first slot of a Solana transaction
-/// (replacing the all-zeros placeholder) and return the modified bytes.
-fn inject_signature(tx: &[u8], sig: &[u8]) -> Result<Vec<u8>, String> {
-    if sig.len() != 64 {
-        return Err(format!("signature must be 64 bytes, got {}", sig.len()));
-    }
-    let (num_sigs, hdr_len) = read_compact_u16(tx)?;
-    if num_sigs == 0 {
-        return Err("transaction has 0 signature slots".into());
-    }
-    if tx.len() < hdr_len + 64 {
-        return Err("transaction too short to hold a signature".into());
-    }
-    let mut signed = tx.to_vec();
-    signed[hdr_len..hdr_len + 64].copy_from_slice(sig);
-    Ok(signed)
-}
-
-// ── Main logic ──────────────────────────────────────────────────────────────
-
-fn run(params_json: &str) -> Result<String, String> {
+fn run(params: &str) -> Result<String, String> {
     #[derive(serde::Deserialize)]
     struct Params {
-        from: String,
-        to: String,
-        amount: f64,
-        taker: String,
+        #[serde(rename = "inputMint")] input_mint: String,
+        #[serde(rename = "outputMint")] output_mint: String,
+        amount: u64,
+        #[serde(rename = "userPublicKey")] user_public_key: String,
+        #[serde(rename = "slippageBps", default = "default_slippage")] slippage_bps: u64,
         confirmed: bool,
     }
+    fn default_slippage() -> u64 { 50 }
 
-    let p: Params = serde_json::from_str(params_json).map_err(|e| e.to_string())?;
-
+    let p: Params = serde_json::from_str(params).map_err(|e| e.to_string())?;
     if !p.confirmed {
-        return Err("Set confirmed:true to execute. Show the user the quote first and ask them to confirm.".into());
+        return Err("Set confirmed:true to execute the swap. Show the quote first and ask user to confirm.".into());
     }
 
-    let input_mint  = resolve_mint(&p.from);
-    let output_mint = resolve_mint(&p.to);
-    let decimals    = decimals_for(&p.from);
-    let amount_raw  = (p.amount * 10f64.powi(decimals as i32)) as u64;
-
-    // ── Step 1: Get Jupiter Ultra order ──────────────────────────────────
-    let order_url = format!(
-        "https://api.jup.ag/ultra/v1/order?inputMint={}&outputMint={}&amount={}&taker={}",
-        input_mint, output_mint, amount_raw, p.taker
+    // Step 1: Get quote
+    let quote_url = format!(
+        "https://lite-api.jup.ag/swap/v1/quote?inputMint={}&outputMint={}&amount={}&slippageBps={}",
+        p.input_mint, p.output_mint, p.amount, p.slippage_bps
     );
+    let quote_resp = near::agent::host::http_request("GET", &quote_url, "{}", None, Some(15000))
+        .map_err(|e| format!("quote failed: {e}"))?;
+    let quote: serde_json::Value = serde_json::from_slice(&quote_resp.body)
+        .map_err(|e| format!("quote parse failed: {e}"))?;
 
-    let order_resp = near::agent::host::http_request("GET", &order_url, "{}", None, None)
-        .map_err(|e| format!("Jupiter order failed: {e}"))?;
-
-    let order: serde_json::Value = serde_json::from_slice(&order_resp.body)
-        .map_err(|e| format!("Jupiter order parse failed: {e}"))?;
-
-    if let Some(err) = order.get("error") {
-        return Err(format!("Jupiter order error: {}", err));
+    if quote.get("error").is_some() {
+        return Err(format!("Quote error: {}", quote["error"]));
     }
 
-    let request_id = order["requestId"]
-        .as_str()
-        .ok_or("missing requestId in order")?
-        .to_string();
-
-    let tx_b64 = order["transaction"]
-        .as_str()
-        .ok_or("missing transaction in order")?;
-
-    // ── Step 2: Sign the transaction ─────────────────────────────────────
-    // Decode base64 transaction
-    let tx_bytes = base64_decode(tx_b64)
-        .map_err(|e| format!("base64 decode failed: {e}"))?;
-
-    // Extract the message bytes (what gets signed)
-    let msg = message_bytes(&tx_bytes)
-        .map_err(|e| format!("message extraction failed: {e}"))?;
-
-    // Call sign_bytes host function — key never leaves the host process
-    let signature = near::agent::host::sign_bytes("solana_private_key", msg)
-        .map_err(|e| format!("signing failed: {e}. Is solana_private_key provisioned?"))?;
-
-    // Inject signature into transaction
-    let signed_tx = inject_signature(&tx_bytes, &signature)
-        .map_err(|e| format!("signature injection failed: {e}"))?;
-
-    let signed_tx_b64 = base64_encode(&signed_tx);
-
-    // ── Step 3: Execute on Jupiter Ultra ─────────────────────────────────
-    let execute_body = serde_json::json!({
-        "requestId": request_id,
-        "signedTransaction": signed_tx_b64,
-    })
-    .to_string();
-
-    let execute_body_bytes = execute_body.into_bytes();
-    let exec_resp = near::agent::host::http_request(
+    // Step 2: Build swap transaction
+    let swap_body = serde_json::json!({
+        "quoteResponse": quote,
+        "userPublicKey": p.user_public_key,
+        "dynamicComputeUnitLimit": true,
+        "prioritizationFeeLamports": "auto"
+    });
+    let swap_resp = near::agent::host::http_request(
         "POST",
-        "https://api.jup.ag/ultra/v1/execute",
+        "https://lite-api.jup.ag/swap/v1/swap",
         r#"{"Content-Type":"application/json"}"#,
-        Some(&execute_body_bytes),
-        None,
-    )
-    .map_err(|e| format!("Jupiter execute failed: {e}"))?;
+        Some(swap_body.to_string().as_bytes()),
+        Some(30000),
+    ).map_err(|e| format!("swap build failed: {e}"))?;
 
-    let result: serde_json::Value = serde_json::from_slice(&exec_resp.body)
-        .map_err(|e| format!("Jupiter execute parse failed: {e}"))?;
+    let swap_data: serde_json::Value = serde_json::from_slice(&swap_resp.body)
+        .map_err(|e| format!("swap parse failed: {e}"))?;
 
-    if let Some(err) = result.get("error") {
-        return Err(format!("Jupiter execute error: {}", err));
+    if swap_data.get("error").is_some() {
+        return Err(format!("Swap build error: {}", swap_data["error"]));
     }
 
-    // ── Step 4: Return result ─────────────────────────────────────────────
-    let signature_str = result["signature"]
-        .as_str()
-        .unwrap_or("unknown");
+    let tx_b64 = swap_data["swapTransaction"].as_str()
+        .ok_or("no swapTransaction in response")?;
 
+    // Step 3: Sign transaction using host sign-bytes primitive
+    let tx_bytes = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, tx_b64)
+        .map_err(|e| format!("tx decode failed: {e}"))?;
+
+    let sig_bytes = near::agent::host::sign_bytes("solana_private_key", &tx_bytes)
+        .map_err(|e| format!("signing failed: {e}"))?;
+
+    if sig_bytes.len() != 64 {
+        return Err(format!("unexpected signature length: {}", sig_bytes.len()));
+    }
+
+    // Insert signature into transaction (position [1..65] for versioned tx)
+    let mut signed_tx = tx_bytes.clone();
+    signed_tx[1..65].copy_from_slice(&sig_bytes);
+    let signed_b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &signed_tx);
+
+    // Step 4: Send signed transaction via public Solana RPC
+    let send_body = serde_json::json!({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "sendTransaction",
+        "params": [signed_b64, {"encoding": "base64", "skipPreflight": false}]
+    });
+    let send_resp = near::agent::host::http_request(
+        "POST",
+        "https://api.mainnet-beta.solana.com",
+        r#"{"Content-Type":"application/json"}"#,
+        Some(send_body.to_string().as_bytes()),
+        Some(30000),
+    ).map_err(|e| format!("send failed: {e}"))?;
+
+    let send_data: serde_json::Value = serde_json::from_slice(&send_resp.body)
+        .map_err(|e| format!("send parse failed: {e}"))?;
+
+    if let Some(err) = send_data.get("error") {
+        return Err(format!("Transaction failed: {}", err));
+    }
+
+    let signature = send_data["result"].as_str().unwrap_or("unknown");
     Ok(serde_json::json!({
-        "status": "executed",
-        "signature": signature_str,
-        "solscan": format!("https://solscan.io/tx/{}", signature_str),
-        "inputMint": input_mint,
-        "outputMint": output_mint,
-        "inAmount": order["inAmount"],
-        "outAmount": order["outAmount"],
-        "priceImpactPct": order["priceImpactPct"],
-    })
-    .to_string())
-}
-
-// ── base64 helpers ───────────────────────────────────────────────────────────
-
-fn base64_decode(s: &str) -> Result<Vec<u8>, String> {
-    use base64::Engine as _;
-    base64::engine::general_purpose::STANDARD.decode(s).map_err(|e| e.to_string())
-}
-
-fn base64_encode(bytes: &[u8]) -> String {
-    use base64::Engine as _;
-    base64::engine::general_purpose::STANDARD.encode(bytes)
+        "signature": signature,
+        "explorer": format!("https://solscan.io/tx/{}", signature),
+        "inAmount": quote["inAmount"],
+        "outAmount": quote["outAmount"],
+        "inputMint": p.input_mint,
+        "outputMint": p.output_mint
+    }).to_string())
 }
 
 export!(Tool);

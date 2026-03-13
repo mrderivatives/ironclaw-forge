@@ -1,1 +1,11 @@
-{"version":"0.2.0","wit_version":"0.3.0","capabilities":{"http":{"allowlist":[{"host":"api.jup.ag","path_prefix":"/ultra/v1/balances","methods":["GET"]}]},"secrets":{"allowed_names":["solana_private_key"]}}}
+{
+  "version": "0.2.0",
+  "wit_version": "0.3.0",
+  "capabilities": {
+    "http": {
+      "allowlist": [
+        { "host": "api.mainnet-beta.solana.com", "path_prefix": "/", "methods": ["POST"] }
+      ]
+    }
+  }
+}

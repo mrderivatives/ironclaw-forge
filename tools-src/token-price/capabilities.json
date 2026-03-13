@@ -1,1 +1,11 @@
-{"version":"0.2.0","wit_version":"0.3.0","capabilities":{"http":{"allowlist":[{"host":"api.jup.ag","path_prefix":"/price/v3","methods":["GET"]}]}}}
+{
+  "version": "0.2.0",
+  "wit_version": "0.3.0",
+  "capabilities": {
+    "http": {
+      "allowlist": [
+        { "host": "api.coingecko.com", "path_prefix": "/api/v3/simple/price", "methods": ["GET"] }
+      ]
+    }
+  }
+}

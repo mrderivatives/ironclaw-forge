@@ -15,32 +15,43 @@ impl Guest for Tool {
         }
     }
     fn schema() -> String {
-        r#"{"type":"object","required":["from","to","amount","taker"],"properties":{"from":{"type":"string","description":"Input token symbol or mint"},"to":{"type":"string","description":"Output token symbol or mint"},"amount":{"type":"number","description":"Amount in human units (e.g. 0.01 for 0.01 SOL)"},"taker":{"type":"string","description":"Taker wallet address"}}}"#.into()
+        r#"{"type":"object","required":["inputMint","outputMint","amount"],"properties":{"inputMint":{"type":"string","description":"Input token mint (e.g. So11111111111111111111111111111111111111112 for SOL)"},"outputMint":{"type":"string","description":"Output token mint (e.g. EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v for USDC)"},"amount":{"type":"integer","description":"Amount in smallest unit (lamports for SOL, 1 SOL = 1000000000)"},"slippageBps":{"type":"integer","description":"Slippage in basis points (default 50 = 0.5%)","default":50}}}"#.into()
     }
     fn description() -> String {
-        "Get a swap quote from Jupiter Ultra. Shows expected output, price impact, and rate — does NOT execute the swap.".into()
+        "Get a swap quote from Jupiter. Returns expected output amount and route. Does NOT execute the swap. Common mints: SOL=So11111111111111111111111111111111111111112, USDC=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v, BONK=DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263".into()
     }
 }
 
 fn run(params: &str) -> Result<String, String> {
     #[derive(serde::Deserialize)]
-    struct Params { from: String, to: String, amount: f64, taker: String }
-    let p: Params = serde_json::from_str(params).map_err(|e| e.to_string())?;
+    struct Params {
+        #[serde(rename = "inputMint")] input_mint: String,
+        #[serde(rename = "outputMint")] output_mint: String,
+        amount: u64,
+        #[serde(rename = "slippageBps", default = "default_slippage")] slippage_bps: u64,
+    }
+    fn default_slippage() -> u64 { 50 }
 
-    // SOL = 9 decimals, USDC = 6; use 9 as default
-    let lamports = (p.amount * 1_000_000_000.0) as u64;
+    let p: Params = serde_json::from_str(params).map_err(|e| e.to_string())?;
     let url = format!(
-        "https://api.jup.ag/ultra/v1/order?inputMint={}&outputMint={}&amount={}&taker={}",
-        p.from, p.to, lamports, p.taker
+        "https://lite-api.jup.ag/swap/v1/quote?inputMint={}&outputMint={}&amount={}&slippageBps={}",
+        p.input_mint, p.output_mint, p.amount, p.slippage_bps
     );
-    let resp = near::agent::host::http_request(
-        "GET",
-        &url,
-        "{}",
-        None,
-        None,
-    ).map_err(|e| e)?;
-    Ok(String::from_utf8_lossy(&resp.body).to_string())
+
+    let resp = near::agent::host::http_request("GET", &url, "{}", None, Some(15000))
+        .map_err(|e| e)?;
+
+    let data: serde_json::Value = serde_json::from_slice(&resp.body).map_err(|e| e.to_string())?;
+
+    Ok(serde_json::json!({
+        "inputMint": data["inputMint"],
+        "outputMint": data["outputMint"],
+        "inAmount": data["inAmount"],
+        "outAmount": data["outAmount"],
+        "priceImpactPct": data["priceImpactPct"],
+        "swapUsdValue": data["swapUsdValue"],
+        "_quoteResponse": data  // full response needed for swap execution
+    }).to_string())
 }
 
 export!(Tool);

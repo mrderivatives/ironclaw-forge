@@ -15,33 +15,42 @@ impl Guest for Tool {
         }
     }
     fn schema() -> String {
-        r#"{"type":"object","properties":{"wallet":{"type":"string","description":"Solana wallet address (optional, defaults to agent wallet)"}}}"#.into()
+        r#"{"type":"object","properties":{"wallet":{"type":"string","description":"Solana wallet address (required)"}},"required":["wallet"]}"#.into()
     }
     fn description() -> String {
-        "Get SOL and SPL token balances for the agent wallet (or any Solana address) via Jupiter Ultra.".into()
+        "Get SOL balance for a Solana wallet address using the public Solana RPC.".into()
     }
 }
 
 fn run(params: &str) -> Result<String, String> {
     #[derive(serde::Deserialize)]
-    struct Params { wallet: Option<String> }
-    let p: Params = serde_json::from_str(params).unwrap_or(Params { wallet: None });
+    struct Params { wallet: String }
+    let p: Params = serde_json::from_str(params).map_err(|e| e.to_string())?;
 
-    let pubkey = match p.wallet {
-        Some(w) => w,
-        None => return Err("wallet address is required (agent wallet injection not yet supported)".into()),
-    };
+    let body = serde_json::json!({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "getBalance",
+        "params": [p.wallet]
+    });
 
-    let url = format!("https://api.jup.ag/ultra/v1/balances?wallet={}", pubkey);
     let resp = near::agent::host::http_request(
-        "GET",
-        &url,
-        "{}",
-        None,
-        None,
+        "POST",
+        "https://api.mainnet-beta.solana.com",
+        r#"{"Content-Type":"application/json"}"#,
+        Some(body.to_string().into_bytes()).as_deref(),
+        Some(15000),
     ).map_err(|e| e)?;
 
-    Ok(String::from_utf8_lossy(&resp.body).to_string())
+    let result: serde_json::Value = serde_json::from_slice(&resp.body).map_err(|e| e.to_string())?;
+    let lamports = result["result"]["value"].as_u64().unwrap_or(0);
+    let sol = lamports as f64 / 1_000_000_000.0;
+
+    Ok(serde_json::json!({
+        "wallet": p.wallet,
+        "sol": sol,
+        "lamports": lamports
+    }).to_string())
 }
 
 export!(Tool);
