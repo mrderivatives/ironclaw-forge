@@ -1,6 +1,6 @@
 wit_bindgen::generate!({
     world: "sandboxed-tool",
-    path: "../../wit/tool.wit",
+    path: "../wit/tool.wit",
 });
 
 use exports::near::agent::tool::Guest;
@@ -180,11 +180,12 @@ fn run(params_json: &str) -> Result<String, String> {
     })
     .to_string();
 
+    let execute_body_bytes = execute_body.into_bytes();
     let exec_resp = near::agent::host::http_request(
         "POST",
         "https://api.jup.ag/ultra/v1/execute",
         r#"{"Content-Type":"application/json"}"#,
-        Some(execute_body.into_bytes()),
+        Some(&execute_body_bytes),
         None,
     )
     .map_err(|e| format!("Jupiter execute failed: {e}"))?;

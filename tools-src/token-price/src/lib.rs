@@ -1,6 +1,6 @@
 wit_bindgen::generate!({
     world: "sandboxed-tool",
-    path: "../../wit/tool.wit",
+    path: "../wit/tool.wit",
 });
 
 use exports::near::agent::tool::Guest;

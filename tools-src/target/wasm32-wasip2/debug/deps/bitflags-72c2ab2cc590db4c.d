@@ -1,0 +1,11 @@
+/Users/beepboop/Projects/ironclaw-forge/tools-src/target/wasm32-wasip2/debug/deps/bitflags-72c2ab2cc590db4c.d: /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/lib.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/iter.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/parser.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/traits.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/public.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/internal.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/external.rs
+
+/Users/beepboop/Projects/ironclaw-forge/tools-src/target/wasm32-wasip2/debug/deps/libbitflags-72c2ab2cc590db4c.rmeta: /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/lib.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/iter.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/parser.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/traits.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/public.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/internal.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/external.rs
+
+/Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/lib.rs:
+/Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/iter.rs:
+/Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/parser.rs:
+/Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/traits.rs:
+/Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/public.rs:
+/Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/internal.rs:
+/Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.11.0/src/external.rs:

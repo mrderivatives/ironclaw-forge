@@ -1,0 +1,14 @@
+/Users/beepboop/Projects/ironclaw-forge/tools-src/target/release/deps/serde-b4aaae1b7fa80923.d: /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/beepboop/Projects/ironclaw-forge/tools-src/target/release/build/serde-ba121e88b4491130/out/private.rs
+
+/Users/beepboop/Projects/ironclaw-forge/tools-src/target/release/deps/libserde-b4aaae1b7fa80923.rlib: /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/beepboop/Projects/ironclaw-forge/tools-src/target/release/build/serde-ba121e88b4491130/out/private.rs
+
+/Users/beepboop/Projects/ironclaw-forge/tools-src/target/release/deps/libserde-b4aaae1b7fa80923.rmeta: /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/beepboop/Projects/ironclaw-forge/tools-src/target/release/build/serde-ba121e88b4491130/out/private.rs
+
+/Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/beepboop/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Users/beepboop/Projects/ironclaw-forge/tools-src/target/release/build/serde-ba121e88b4491130/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/beepboop/Projects/ironclaw-forge/tools-src/target/release/build/serde-ba121e88b4491130/out
