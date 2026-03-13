@@ -28,7 +28,9 @@ RUN git clone --depth 1 --branch ${IRONCLAW_REF} \
     https://github.com/mrderivatives/ironclaw-core.git .
 
 COPY tools-src /app/tools-src
-RUN cd /app/tools-src && cargo build --release --target wasm32-wasip2 --workspace 2>&1 | tail -5
+# Sync WIT from ironclaw-core (has sign-bytes / pubkey-for) into tools build tree
+RUN cp /app/wit/tool.wit /app/tools-src/wit/tool.wit
+RUN cd /app/tools-src && cargo build --release --target wasm32-wasip2 --workspace
 RUN mkdir -p /app/tools-dist && \
     for tool in solana-balance token-price jupiter-quote jupiter-swap; do \
       wasm-tools component new \
