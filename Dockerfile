@@ -13,15 +13,14 @@
 ARG IRONCLAW_REF=staging
 
 # ── Stage 1: build IronClaw from source ────────────────────────────────────
-FROM rust:1.92-slim-bookworm AS builder
+FROM rust:1.85-slim-bookworm AS builder
 
 ARG IRONCLAW_REF
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     pkg-config libssl-dev cmake gcc g++ git \
     && rm -rf /var/lib/apt/lists/* \
-    && rustup target add wasm32-wasip2 \
-    && cargo install wasm-tools
+    && rustup target add wasm32-wasip2
 
 WORKDIR /app
 RUN git clone --depth 1 --branch ${IRONCLAW_REF} \
@@ -31,11 +30,11 @@ COPY tools-src /app/tools-src
 # Sync WIT from ironclaw-core (has sign-bytes / pubkey-for) into tools build tree
 RUN cp /app/wit/tool.wit /app/tools-src/wit/tool.wit
 RUN cd /app/tools-src && cargo build --release --target wasm32-wasip2 --workspace
+# wasm32-wasip2 already outputs WASM components — copy directly, no wasm-tools needed
 RUN mkdir -p /app/tools-dist && \
     for tool in solana-balance token-price jupiter-quote jupiter-swap; do \
-      wasm-tools component new \
-        /app/tools-src/target/wasm32-wasip2/release/$(echo $tool | tr - _).wasm \
-        -o /app/tools-dist/${tool}.wasm && \
+      cp /app/tools-src/target/wasm32-wasip2/release/$(echo $tool | tr - _).wasm \
+         /app/tools-dist/${tool}.wasm && \
       cp /app/tools-src/${tool}/capabilities.json /app/tools-dist/${tool}.capabilities.json; \
     done
 
