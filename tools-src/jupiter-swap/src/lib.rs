@@ -183,8 +183,8 @@ fn run(params_json: &str) -> Result<String, String> {
     let exec_resp = near::agent::host::http_request(
         "POST",
         "https://api.jup.ag/ultra/v1/execute",
-        &execute_body,
-        Some(&[("Content-Type".to_string(), "application/json".to_string())]),
+        r#"{"Content-Type":"application/json"}"#,
+        Some(execute_body.into_bytes()),
         None,
     )
     .map_err(|e| format!("Jupiter execute failed: {e}"))?;
@@ -214,15 +214,16 @@ fn run(params_json: &str) -> Result<String, String> {
     .to_string())
 }
 
-// ── Minimal base64 (no external dep beyond what's in Cargo.toml) ────────────
+// ── base64 helpers ───────────────────────────────────────────────────────────
 
 fn base64_decode(s: &str) -> Result<Vec<u8>, String> {
-    base64::Engine::decode(&base64::engine::general_purpose::STANDARD, s)
-        .map_err(|e| e.to_string())
+    use base64::Engine as _;
+    base64::engine::general_purpose::STANDARD.decode(s).map_err(|e| e.to_string())
 }
 
 fn base64_encode(bytes: &[u8]) -> String {
-    base64::Engine::encode(&base64::engine::general_purpose::STANDARD, bytes)
+    use base64::Engine as _;
+    base64::engine::general_purpose::STANDARD.encode(bytes)
 }
 
 export!(Tool);
