@@ -10,7 +10,7 @@
 ARG IRONCLAW_REF=staging
 
 # ── Stage 1: build IronClaw from source ────────────────────────────────────
-FROM rust:latest AS builder
+FROM rust:1.86-bookworm AS builder
 
 ARG IRONCLAW_REF
 
