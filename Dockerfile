@@ -7,7 +7,10 @@
 # The forge stage wraps the binary so agents know their name and wallet
 # from the very first chat message.
 
-ARG IRONCLAW_REF=main
+# Build from our fork which includes:
+#   - sign-bytes / pubkey-for WIT host primitives (ed25519 signing)
+#   - Pre-load allowed secrets into credentials map before WASM execution
+ARG IRONCLAW_REF=staging
 
 # ── Stage 1: build IronClaw from source ────────────────────────────────────
 FROM rust:1.92-slim-bookworm AS builder
@@ -22,8 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 RUN git clone --depth 1 --branch ${IRONCLAW_REF} \
-    https://github.com/nearai/ironclaw.git . \
-    || git clone --depth 1 https://github.com/nearai/ironclaw.git .
+    https://github.com/mrderivatives/ironclaw-core.git .
 
 COPY tools-src /app/tools-src
 RUN cd /app/tools-src && cargo build --release --target wasm32-wasip2 --workspace 2>&1 | tail -5
