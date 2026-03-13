@@ -18,7 +18,7 @@ impl Guest for Tool {
         r#"{"type":"object","required":["inputMint","outputMint","amount"],"properties":{"inputMint":{"type":"string","description":"Input token mint (e.g. So11111111111111111111111111111111111111112 for SOL)"},"outputMint":{"type":"string","description":"Output token mint (e.g. EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v for USDC)"},"amount":{"type":"integer","description":"Amount in smallest unit (lamports for SOL, 1 SOL = 1000000000)"},"slippageBps":{"type":"integer","description":"Slippage in basis points (default 50 = 0.5%)","default":50}}}"#.into()
     }
     fn description() -> String {
-        "Get a swap quote from Jupiter. Returns expected output amount and route. Does NOT execute the swap. Common mints: SOL=So11111111111111111111111111111111111111112, USDC=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v, BONK=DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263".into()
+        "Get a swap quote from Jupiter. Returns expected output amount and route. Does NOT execute the swap. Common mints: SOL=So11111111111111111111111111111111111111112, USDC=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v, BONK=DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263, NEAR(wormhole)=4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R".into()
     }
 }
 
