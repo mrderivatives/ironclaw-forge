@@ -7,10 +7,10 @@
 # The forge stage wraps the binary so agents know their name and wallet
 # from the very first chat message.
 
-ARG IRONCLAW_REF=main
+ARG IRONCLAW_REF=staging
 
 # ── Stage 1: build IronClaw from source ────────────────────────────────────
-FROM rust:1.85-slim-bookworm AS builder
+FROM rust:latest AS builder
 
 ARG IRONCLAW_REF
 
@@ -21,8 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 RUN git clone --depth 1 --branch ${IRONCLAW_REF} \
-    https://github.com/nearai/ironclaw.git . \
-    || git clone --depth 1 https://github.com/nearai/ironclaw.git .
+    https://github.com/mrderivatives/ironclaw-core.git .
 
 COPY tools-src /app/tools-src
 # Sync WIT from nearai/ironclaw into tools build tree so versions stay in lock-step
