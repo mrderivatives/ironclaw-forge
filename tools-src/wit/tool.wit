@@ -103,13 +103,6 @@ interface host {
     ///
     /// Returns true if the secret exists and is accessible to this tool.
     secret-exists: func(name: string) -> bool;
-
-    /// Derive the base58-encoded public key for a named keypair. Safe to expose.
-    pubkey-for: func(key-name: string) -> option<string>;
-
-    /// Sign arbitrary bytes with a named ed25519 keypair. Key never leaves host.
-    /// Returns 64-byte signature or Err.
-    sign-bytes: func(key-name: string, message: list<u8>) -> result<list<u8>, string>;
 }
 
 /// Tool interface that sandboxed tools must implement.
