@@ -18,7 +18,7 @@ impl Guest for Tool {
         r#"{"type":"object","required":["inputMint","outputMint","amount","userPublicKey","confirmed"],"properties":{"inputMint":{"type":"string","description":"Input token mint address"},"outputMint":{"type":"string","description":"Output token mint address"},"amount":{"type":"integer","description":"Amount in lamports (1 SOL = 1000000000)"},"userPublicKey":{"type":"string","description":"Agent wallet public key for signing"},"slippageBps":{"type":"integer","default":50},"confirmed":{"type":"boolean","description":"Must be true to execute — safety guard"}}}"#.into()
     }
     fn description() -> String {
-        "Execute a real token swap via Jupiter. Gets a quote, signs the transaction using the agent's keypair, and submits to Solana. Set confirmed:true. Common mints: SOL=So11111111111111111111111111111111111111112, USDC=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v, BONK=DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263, NEAR(wormhole)=4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R".into()
+        "Execute a real token swap via Jupiter. Gets a quote, signs the transaction using the agent's keypair, and submits to Solana. Set confirmed:true. Common mints: SOL=So11111111111111111111111111111111111111112, USDC=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v, BONK=DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263, NEAR(wormhole)=3ZLekZYq2qkZiSpnSvabjit34tUkjSwD1JFuW9as9wBG".into()
     }
 }
 
